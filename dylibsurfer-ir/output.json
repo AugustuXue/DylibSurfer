@@ -1,0 +1,85 @@
+[
+  {
+    "name": "crc32",
+    "return_type": {
+      "type": "Int",
+      "data": 32
+    },
+    "parameters": [
+      {
+        "name": "arg0",
+        "ty": {
+          "type": "Int",
+          "data": 32
+        }
+      },
+      {
+        "name": "arg1",
+        "ty": {
+          "type": "Pointer",
+          "data": {
+            "type": "Int",
+            "data": 8
+          }
+        }
+      },
+      {
+        "name": "arg2",
+        "ty": {
+          "type": "Int",
+          "data": 32
+        }
+      }
+    ]
+  },
+  {
+    "name": "png_read_row",
+    "return_type": {
+      "type": "Void"
+    },
+    "parameters": [
+      {
+        "name": "arg0",
+        "ty": {
+          "type": "Pointer",
+          "data": {
+            "type": "Struct",
+            "data": {
+              "name": "struct.png_struct",
+              "fields": [
+                {
+                  "type": "Int",
+                  "data": 32
+                },
+                {
+                  "type": "Int",
+                  "data": 32
+                },
+                {
+                  "type": "Pointer",
+                  "data": {
+                    "type": "Int",
+                    "data": 8
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "arg1",
+        "ty": {
+          "type": "Pointer",
+          "data": {
+            "type": "Pointer",
+            "data": {
+              "type": "Int",
+              "data": 8
+            }
+          }
+        }
+      }
+    ]
+  }
+]

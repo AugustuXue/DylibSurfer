@@ -1,0 +1,7 @@
+/target
+**/*.rs.bak
+# Cargo lock file
+Cargo.lock
+
+# IDE specific files
+.vscode/
