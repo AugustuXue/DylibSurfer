@@ -208,6 +208,8 @@ fn to_snake_case(s: &str) -> String {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+    use crate::mapping::config::MappingConfig; // 使用绝对路径
+    use dylibsurfer_ir::{ResolvedType, PrimitiveType, StructField};
 
     #[test]
     fn test_load_config() {
