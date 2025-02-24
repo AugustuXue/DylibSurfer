@@ -250,11 +250,14 @@ impl ThreadSafeTypeResolver {
         Ok(resolved)
     }
 
+    //计算给定 ResolvedType 的内存布局，即类型的大小（size）和对齐要求（alignment）
     pub fn get_type_layout(&self, ty: &ResolvedType) -> Result<(usize, usize), TypeResolveError> {
         match ty {
             ResolvedType::Void => Ok((0, 1)),
             ResolvedType::Primitive(p) => Ok((p.size(), p.alignment())),
+            //64位系统返回固定值(8, 8)，32位待适配 #todo
             ResolvedType::Pointer(_) => Ok((8, 8)),
+            //数组的大小等于元素的大小乘以数组的长度
             ResolvedType::Array { element_type, length } => {
                 let (elem_size, elem_align) = self.get_type_layout(element_type)?;
                 Ok((elem_size * length, elem_align))
@@ -265,17 +268,20 @@ impl ThreadSafeTypeResolver {
         }
     }
 
+    //将一个已解析的类型（ResolvedType）注册到类型缓存中
     pub fn register_type(&self, name: String, ty: ResolvedType) {
         let mut cache = self.type_cache.write();
         cache.insert(name, ty);
     }
 
+    //从类型缓存中查找指定名称的类型，并返回其对应的已解析类型（ResolvedType）
     pub fn lookup_type(&self, name: &str) -> Option<ResolvedType> {
         let cache = self.type_cache.read();
         cache.get(name).cloned()
     }
 }
 
+//将一个值（value）对齐到指定的对齐要求（alignment）
 fn align_to(value: usize, alignment: usize) -> usize {
     (value + alignment - 1) & !(alignment - 1)
 }

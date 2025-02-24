@@ -21,7 +21,7 @@ fn test_resolve_png_struct() {
     let path = std::path::PathBuf::from("testdata/libpng.ll");
     let signatures = parser.parse_ir_file(&path).unwrap();
     
-    let mut resolver = ThreadSafeTypeResolver::new();
+    let resolver = ThreadSafeTypeResolver::new();
     
     // 找到png_struct的签名
     let png_struct = signatures.iter()
