@@ -1,0 +1,94 @@
+# 基本类型映射表 - 直接对应 PrimitiveType 枚举
+primitives:
+  Void: "()"
+  Bool: "bool"
+  Char: "c_char"
+  SChar: "c_schar"
+  UChar: "c_uchar"
+  Short: "c_short"
+  UShort: "c_ushort"
+  Int: "c_int"
+  UInt: "c_uint"
+  Long: "c_long"
+  ULong: "c_ulong"
+  LongLong: "c_longlong"
+  ULongLong: "c_ulonglong"
+  Float: "c_float"
+  Double: "c_double"
+  LongDouble: "c_longdouble"
+
+# 复合类型处理规则
+type_rules:
+  # 指针类型规则
+  pointer:
+    # 基础指针模板
+    template: "*mut {inner}"
+    # 特殊指针处理
+    special_cases:
+      - match: "void*"
+        map_to: "*mut c_void"
+      - match: "char*"
+        map_to: "*mut c_char"
+    # 智能指针转换规则(可选)
+    smart_ptr:
+      enabled: false
+      rules:
+        - match: "void**"
+          map_to: "Box<*mut c_void>"
+
+  # 结构体规则
+  struct:
+    # 结构体属性
+    attributes:
+      - "#[repr(C)]"
+      - "#[derive(Debug)]"
+    # 字段处理
+    field_handling:
+      naming: "snake_case"  # 字段命名规则
+      visibility: "pub"     # 字段可见性
+    # 布局控制
+    layout:
+      respect_alignment: true
+      pack_value: null  # 可选的打包值
+
+  # 数组规则
+  array:
+    # 固定大小数组模板
+    fixed_size: "[{inner}; {size}]"
+    # 动态大小数组处理
+    dynamic: "Vec<{inner}>"
+
+# 类型转换前预处理规则
+preprocessing:
+  # 类型名称处理
+  type_names:
+    - pattern: "_t$"
+      action: "strip_suffix"
+    - pattern: "^(struct|union)\\s+"
+      action: "strip_prefix"
+
+# 导入设置
+imports:
+  # 默认导入
+  default:
+    - "use std::os::raw::*"
+    - "use std::ptr"
+  # 条件导入(根据使用的类型自动添加)
+  conditional:
+    libc:
+      types: ["FILE", "DIR"]
+      import: "use libc::*"
+    std_ffi:
+      types: ["CString", "CStr"]
+      import: "use std::ffi::*"
+
+# 安全性设置
+safety:
+  # 不安全函数的处理
+  unsafe_fn:
+    add_unsafe: true
+    wrapper_template: |
+      /// Safe wrapper for {original_name}
+      pub fn {safe_name}({args}) -> {ret} {{
+          unsafe {{ {original_name}({call_args}) }}
+      }}

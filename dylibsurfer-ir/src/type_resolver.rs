@@ -1,3 +1,4 @@
+//类型解析器
 use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::RwLock;
@@ -255,8 +256,13 @@ impl ThreadSafeTypeResolver {
         match ty {
             ResolvedType::Void => Ok((0, 1)),
             ResolvedType::Primitive(p) => Ok((p.size(), p.alignment())),
-            //64位系统返回固定值(8, 8)，32位待适配 #todo
-            ResolvedType::Pointer(_) => Ok((8, 8)),
+            //64位系统返回固定值(8, 8)，32位((4, 4)
+            ResolvedType::Pointer(_) => {
+                #[cfg(target_pointer_width = "64")]
+                { Ok((8, 8)) }
+                #[cfg(target_pointer_width = "32")]
+                { Ok((4, 4)) }
+            }
             //数组的大小等于元素的大小乘以数组的长度
             ResolvedType::Array { element_type, length } => {
                 let (elem_size, elem_align) = self.get_type_layout(element_type)?;

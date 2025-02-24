@@ -1,0 +1,11 @@
+[package]
+name = "dylibsurfer-bindgen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dylibsurfer-ir = { path = "../dylibsurfer-ir" }
+serde_yaml = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+regex = "1.5"
+thiserror = "1.0"
