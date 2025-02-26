@@ -1,6 +1,6 @@
 // mapping/engine.rs 映射规则引擎
 use super::config::MappingConfig;
-use dylibsurfer_ir::{ResolvedType, PrimitiveType};
+use dylibsurfer_ir::{type_resolver::{PrimitiveType, StructField}, ResolvedType};
 use regex::Regex;
 use thiserror::Error;
 
@@ -209,7 +209,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
     use crate::mapping::config::MappingConfig; // 使用绝对路径
-    use dylibsurfer_ir::{ResolvedType, PrimitiveType, StructField};
+    use dylibsurfer_ir::{ResolvedType, type_resolver::PrimitiveType};
 
     #[test]
     fn test_load_config() {
