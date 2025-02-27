@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "dylibsurfer-ir",     # 包含子项目 dylibsurfer-ir
+    "dylibsurfer-bindgen" # 包含子项目 dylibsurfer-bindgen
+]
+resolver = "2"  # 可选，指定依赖解析器版本（推荐使用）
