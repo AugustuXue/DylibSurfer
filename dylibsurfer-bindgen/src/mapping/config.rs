@@ -2,19 +2,21 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-//Deserialize:为类型实现反序列化功能，使其可以从 JSON、YAML 等数据格式中解析
-//Serialize:为类型实现序列化功能，使其可以转换为 JSON、YAML 等数据格式
+/// MappingConfig 结构体用于配置映射规则。
+///
+/// 该结构体通过 `Deserialize` 和 `Serialize` trait 实现反序列化和序列化功能，
+/// 使其可以从 JSON、YAML 等数据格式中解析或转换为这些格式。
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MappingConfig {
-    //基本类型映射表
+    /// 基本类型映射表
     pub primitives: HashMap<String, String>,
-    //复合类型处理规则
+    /// 复合类型处理规则
     pub type_rules: TypeRules,
-    //预处理规则
+    /// 预处理规则（类型名称转换）
     pub preprocessing: PreprocessingRules,
-    //导入配置
+    /// 导入配置
     pub imports: ImportConfig,
-    //安全配置
+    /// 安全配置
     pub safety: SafetyConfig,
 }
 
@@ -40,21 +42,21 @@ pub struct TypeRules {
  */
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PointerRules {
-    // 基础指针模板
+    /// 基础指针模板
     pub template: String,
-    // 特殊指针处理
+    /// 特殊指针处理
     pub special_cases: Vec<SpecialCase>,
-    // 智能指针配置
+    /// 智能指针配置
     pub smart_ptr: Option<SmartPtrRules>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SpecialCase {
-    // 别名映射 YAML 的 match 字段
+    /// 别名映射 YAML 的 match 字段
     #[serde(alias = "match")]
-    // 匹配模式
+    /// 匹配模式
     pub match_: String,
-    // 映射目标
+    /// 映射目标
     pub map_to: String,
 }
 
@@ -66,11 +68,11 @@ pub struct SmartPtrRules {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct StructRules {
-    // 结构体属性（如 #[repr(C)]）
+    /// 结构体属性（如 #[repr(C)]）
     pub attributes: Vec<String>,
-    // 字段处理规则
+    /// 字段处理规则
     pub field_handling: FieldHandling,
-    // 内存布局控制
+    /// 内存布局控制
     pub layout: LayoutConfig,
 }
 
@@ -91,12 +93,19 @@ pub struct ArrayRules {
     pub fixed_size: String,
     pub dynamic: String,
 }
-
+///- **功能**：定义 **类型名称的预处理规则集合**。
+///- 字段：
+///  - `type_names: Vec<TypeNameRule>`：存储多个预处理规则，每个规则是一个 `TypeNameRule`。
+///- **设计目标**：通过正则表达式和动作的组合，对类型名称进行批量处理（如删除前缀/后缀）。
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PreprocessingRules {
     pub type_names: Vec<TypeNameRule>,
 }
 
+///- **功能**：定义 **单个预处理规则**，包含正则表达式和对应的处理动作。
+///- 字段：
+///  - `pattern: String`：正则表达式字符串，用于匹配类型名称中的特定模式。
+///  - `action: String`：指定对匹配内容的处理动作（如 `strip_suffix`、`strip_prefix`）。
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TypeNameRule {
     pub pattern: String,
@@ -136,7 +145,7 @@ impl MappingConfig {
         Ok(config)
     }
 
-    //在 self.primitives（HashMap<String, String>）中查找键对应的值
+    /// 在 self.primitives（HashMap<String, String>）中查找键对应的值
     pub fn get_primitive_mapping(&self, primitive_type: &str) -> Option<&String> {
         self.primitives.get(primitive_type)
     }
