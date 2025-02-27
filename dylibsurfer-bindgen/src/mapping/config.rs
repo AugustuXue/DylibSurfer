@@ -2,34 +2,59 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+//Deserialize:为类型实现反序列化功能，使其可以从 JSON、YAML 等数据格式中解析
+//Serialize:为类型实现序列化功能，使其可以转换为 JSON、YAML 等数据格式
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MappingConfig {
+    //基本类型映射表
     pub primitives: HashMap<String, String>,
+    //复合类型处理规则
     pub type_rules: TypeRules,
+    //预处理规则
     pub preprocessing: PreprocessingRules,
+    //导入配置
     pub imports: ImportConfig,
+    //安全配置
     pub safety: SafetyConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TypeRules {
     pub pointer: PointerRules,
+    // 映射 YAML 的 struct 字段
     #[serde(rename = "struct")]
     pub struct_: StructRules,
     pub array: ArrayRules,
 }
 
+/*
+    e.g.
+    pointer:
+        template: "*mut {inner}"
+        special_cases:
+            - match: "void*"
+            map_to: "*mut c_void"
+        smart_ptr:
+            enabled: true
+            rules: [...]
+ */
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PointerRules {
+    // 基础指针模板
     pub template: String,
+    // 特殊指针处理
     pub special_cases: Vec<SpecialCase>,
+    // 智能指针配置
     pub smart_ptr: Option<SmartPtrRules>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SpecialCase {
-    #[serde(alias = "match")]  // 添加别名映射
+    // 别名映射 YAML 的 match 字段
+    #[serde(alias = "match")]
+    // 匹配模式
     pub match_: String,
+    // 映射目标
     pub map_to: String,
 }
 
@@ -41,8 +66,11 @@ pub struct SmartPtrRules {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct StructRules {
+    // 结构体属性（如 #[repr(C)]）
     pub attributes: Vec<String>,
+    // 字段处理规则
     pub field_handling: FieldHandling,
+    // 内存布局控制
     pub layout: LayoutConfig,
 }
 
@@ -99,12 +127,16 @@ pub struct UnsafeFnConfig {
 }
 
 impl MappingConfig {
+    //加载配置文件
     pub fn load_from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        //读取文件内容
         let config_str = std::fs::read_to_string(path)?;
+        //将 YAML 字符串反序列化为 MappingConfig 结构体
         let config = serde_yaml::from_str(&config_str)?;
         Ok(config)
     }
 
+    //在 self.primitives（HashMap<String, String>）中查找键对应的值
     pub fn get_primitive_mapping(&self, primitive_type: &str) -> Option<&String> {
         self.primitives.get(primitive_type)
     }
