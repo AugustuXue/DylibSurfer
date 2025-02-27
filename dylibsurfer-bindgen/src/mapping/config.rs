@@ -14,6 +14,7 @@ pub struct MappingConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TypeRules {
     pub pointer: PointerRules,
+    #[serde(rename = "struct")]
     pub struct_: StructRules,
     pub array: ArrayRules,
 }
@@ -27,6 +28,7 @@ pub struct PointerRules {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SpecialCase {
+    #[serde(alias = "match")]  // 添加别名映射
     pub match_: String,
     pub map_to: String,
 }
