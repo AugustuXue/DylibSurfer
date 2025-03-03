@@ -1,5 +1,6 @@
 // src/lib.rs
 pub mod type_resolver;
+//最小接口原则，只暴露核心公共 API（如 ResolvedType），隐藏实现细节（如 PrimitiveType）
 pub use type_resolver::{ThreadSafeTypeResolver, ResolvedType, TypeResolveError};
 use inkwell::{context::Context, memory_buffer::MemoryBuffer, types::{BasicTypeEnum, AnyTypeEnum}};
 use serde::Serialize;

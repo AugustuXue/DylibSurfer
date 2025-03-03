@@ -422,6 +422,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
     use crate::mapping::config::MappingConfig; // 使用绝对路径
+    //因为最小接口原则，暴露了核心公共API（如 ResolvedType），但实现细节被隐藏（如 PrimitiveType），所以PrimitiveType需要完整路径
     use dylibsurfer_ir::{ResolvedType, type_resolver::PrimitiveType};
 
     #[test]
