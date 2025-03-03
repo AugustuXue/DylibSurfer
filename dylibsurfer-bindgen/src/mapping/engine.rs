@@ -193,17 +193,35 @@ impl MappingEngine {
         Ok(rust_struct)
     }
 
+    /// 将联合体类型 (`ResolvedType::Union`) 映射为目标语言的代码。
+///
+/// 该方法根据联合体名称和变体信息，生成相应的联合体定义代码。
+///
+/// # 参数
+/// - `name`: 联合体名称，类型为 `&str`。
+/// - `variants`: 联合体变体列表，类型为 `&[StructField]`。
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回生成的目标语言代码字符串。
+/// - `Err(MappingError)`: 如果变体类型映射失败，返回错误信息。
     fn map_union(&self, name: &str, variants: &[StructField]) -> Result<String, MappingError> {
-        // 将联合体映射为带有 repr(C) 的结构体
+        // 调用 preprocess_type_name 方法，对联合体名称进行预处理（如删除前缀/后缀）
         let processed_name = self.preprocess_type_name(name);
+        //创建空字符串 rust_union，存储生成的联合体代码
         let mut rust_union = String::new();
 
+        //添加 #[repr(C)] 属性，确保联合体的内存布局与 C 语言兼容
         rust_union.push_str("#[repr(C)]\n");
+        //添加联合体定义，包括联合体名称
         rust_union.push_str(&format!("pub union {} {{\n", processed_name));
 
+        //添加变体
         for variant in variants {
+            //调用 map_type 方法，递归映射变体类型
             let variant_type = self.map_type(&variant.ty)?;
+            //调用 process_field_name 方法，处理变体名称（如转换为蛇形命名）
             let variant_name = self.process_field_name(&variant.name);
+            //将变体定义添加到 rust_union 中
             rust_union.push_str(&format!("    pub {}: {},\n", variant_name, variant_type));
         }
 
@@ -211,28 +229,71 @@ impl MappingEngine {
         Ok(rust_union)
     }
 
+/// 将类型别名映射为 Rust 的 `type` 定义。
+///
+/// 此函数用于生成 `pub type {别名} = {实际类型};` 形式的 Rust 代码。
+///
+/// # 参数
+/// - `name`: 原始类型别名（例如 C/C++ 中的 `typedef` 名称）。
+/// - `actual_type`: 解析后的实际类型（通过 `ResolvedType` 表示）。
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回生成的 Rust 类型别名代码。
+/// - `Err(MappingError)`: 如果实际类型无法映射到合法的 Rust 类型，返回错误。
+///
+/// # 流程
+/// 1. ​**预处理类型名**: 调用 `preprocess_type_name` 处理原始别名，确保符合 Rust 命名规范。
+/// 2. ​**映射实际类型**: 调用 `map_type` 将 `ResolvedType` 转换为 Rust 类型字符串。
+/// 3. ​**生成代码**: 组合预处理后的别名和映射后的类型，生成 `pub type` 定义。
     fn map_typedef(&self, name: &str, actual_type: &ResolvedType) -> Result<String, MappingError> {
+        //预处理类型别名
         let processed_name = self.preprocess_type_name(name);
+        //将 ResolvedType 映射为 Rust 类型字符串（如 "u32" 或 "libc::c_int"）
         let actual_type_str = self.map_type(actual_type)?;
         
+        // 生成最终的 `pub type` 定义代码
         Ok(format!("pub type {} = {};\n", processed_name, actual_type_str))
     }
 
+/// 预处理类型名称，根据配置的模式和操作对名称进行修改。
+///
+/// 此函数用于处理原始类型名称（例如 C/C++ 中的类型名），
+/// 根据 `self.type_name_patterns` 中定义的正则表达式模式和执行操作，
+/// 对名称进行前缀或后缀的删除，以生成符合目标语言（如 Rust）规范的名称。
+///
+/// # 参数
+/// - `name`: 原始类型名称（例如 C/C++ 中的类型名）。
+///
+/// # 返回值
+/// - `String`: 处理后的类型名称。
+///
+/// # 处理流程
+/// 1. 遍历 `self.type_name_patterns` 中的每个模式及其操作。
+/// 2. 根据操作类型（如 `"strip_suffix"` 或 `"strip_prefix"`），
+///    使用正则表达式匹配并删除名称中的前缀或后缀。
+/// 3. 返回最终处理后的名称。
     fn preprocess_type_name(&self, name: &str) -> String {
+        // 将原始名称转换为可修改的字符串
         let mut processed = name.to_string();
         
+        // 遍历所有模式及其操作
         for (pattern, action) in &self.type_name_patterns {
             match action.as_str() {
+                // 如果操作是删除后缀
                 "strip_suffix" => {
+                    // 使用正则表达式匹配后缀
                     if let Some(mat) = pattern.find(&processed) {
+                        //删除后缀
                         processed = processed[..mat.start()].to_string();
                     }
                 }
+                // 如果操作是删除前缀，同上
                 "strip_prefix" => {
                     if let Some(mat) = pattern.find(&processed) {
                         processed = processed[mat.end()..].to_string();
                     }
                 }
+                // 其他操作（暂不处理）
                 _ => {}
             }
         }
@@ -240,13 +301,46 @@ impl MappingEngine {
         processed
     }
 
+/// 处理结构体字段名称，根据配置的命名规则将其转换为目标格式。
+///
+/// 此函数用于将原始字段名称（例如 C/C++ 中的字段名）转换为符合目标语言（如 Rust）规范的命名格式。
+/// 具体转换规则由 `self.config.type_rules.struct_.field_handling.naming` 配置决定。
+///
+/// # 参数
+/// - `name`: 原始字段名称（例如 C/C++ 中的字段名）。
+///
+/// # 返回值
+/// - `String`: 处理后的字段名称。
+///
+/// # 处理流程
+/// 1. 检查配置中的命名规则（`naming`）。
+/// 2. 如果规则为 `"snake_case"`，将原始名称转换为蛇形命名法（snake_case）。
+/// 3. 否则，直接返回原始名称。
     fn process_field_name(&self, name: &str) -> String {
+        // 获取配置中的命名规则
         match self.config.type_rules.struct_.field_handling.naming.as_str() {
+            // 如果规则是蛇形命名法，调用 to_snake_case 函数进行转换
             "snake_case" => to_snake_case(name),
+            // 其他情况，直接返回原始名称
             _ => name.to_string(),
         }
     }
 
+/// 获取解析类型所需的导入项列表。
+///
+/// 此函数用于根据 `ResolvedType` 分析所需的导入项（如模块、库或类型），
+/// 并结合配置中的默认导入项，返回完整的导入列表。
+///
+/// # 参数
+/// - `resolved_type`: 解析后的类型（通过 `ResolvedType` 表示）。
+///
+/// # 返回值
+/// - `Vec<String>`: 所需的导入项列表。
+///
+/// # 处理流程
+/// 1. 复制配置中的默认导入项（`self.config.imports.default`）。
+/// 2. 调用 `analyze_type_for_imports` 函数，根据 `resolved_type` 分析并添加条件导入项。
+/// 3. 返回最终的导入项列表。
     pub fn get_required_imports(&self, resolved_type: &ResolvedType) -> Vec<String> {
         let mut imports = self.config.imports.default.clone();
         
@@ -256,6 +350,19 @@ impl MappingEngine {
         imports
     }
 
+/// 分析解析类型，根据其结构添加必要的导入项。
+///
+/// 此函数用于递归地分析 `ResolvedType`，并根据其类型结构（如指针、数组、自定义类型等）
+/// 添加所需的导入项到 `imports` 列表中。
+///
+/// # 参数
+/// - `ty`: 解析后的类型（通过 `ResolvedType` 表示）。
+/// - `imports`: 导入项列表，用于存储分析结果。
+///
+/// # 处理流程
+/// 1. 匹配 `ResolvedType` 的具体类型。
+/// 2. 根据类型结构添加必要的导入项。
+/// 3. 递归分析嵌套类型（如指针指向的类型）。
     fn analyze_type_for_imports(&self, ty: &ResolvedType, imports: &mut Vec<String>) {
         match ty {
             ResolvedType::Pointer(inner) => {
@@ -271,7 +378,27 @@ impl MappingEngine {
     }
 }
 
-// 辅助函数：将 CamelCase 转换为 snake_case
+/// 将字符串转换为蛇形命名法（snake_case）。
+///
+/// 此函数用于将驼峰命名法（CamelCase）或帕斯卡命名法（PascalCase）的字符串
+/// 转换为蛇形命名法（snake_case）。例如：
+/// - `MyVariable` → `my_variable`
+/// - `userID` → `user_id`
+///
+/// # 参数
+/// - `s`: 原始字符串（通常是驼峰或帕斯卡命名法的字符串）。
+///
+/// # 返回值
+/// - `String`: 转换后的蛇形命名法字符串。
+///
+/// # 处理流程
+/// 1. 初始化一个 `String` 用于存储结果，并预分配足够的容量。
+/// 2. 使用 `chars().peekable()` 遍历字符串的每个字符。
+/// 3. 对于每个大写字符：
+///    - 如果它不是第一个字符，且下一个字符是小写字母，则在结果中添加下划线。
+///    - 将大写字符转换为小写并添加到结果中。
+/// 4. 对于其他字符，直接添加到结果中。
+/// 5. 返回最终的蛇形命名法字符串。
 fn to_snake_case(s: &str) -> String {
     let mut result = String::with_capacity(s.len());
     let mut chars = s.chars().peekable();
