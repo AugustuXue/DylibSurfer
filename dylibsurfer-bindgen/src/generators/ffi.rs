@@ -5,6 +5,19 @@ use dylibsurfer_ir::{FunctionSignature, ResolvedType, TypeResolveError, ThreadSa
 use std::collections::HashSet;
 use thiserror::Error;
 
+/// 将 FFI 错误类型 (`FfiError`) 转换为可读的错误信息。
+///
+/// 该枚举类型用于表示 FFI 操作中可能发生的错误，包括类型解析错误、类型映射错误和代码生成错误。
+/// 每个错误变体都包含详细的错误信息，可以通过 `Display` trait 格式化为用户友好的错误消息。
+///
+/// # 参数
+/// - `TypeResolutionError`: 类型解析错误，包含底层的 `TypeResolveError` 作为错误来源。
+/// - `MappingError`: 类型映射错误，包含一个 `String` 类型的错误描述。
+/// - `CodegenError`: 代码生成错误，包含一个 `String` 类型的错误描述。
+///
+/// # 返回值
+/// - 实现了 `std::error::Error` trait，可以通过 `?` 操作符传播错误。
+/// - 通过 `Display` trait 可以格式化为用户友好的错误消息。
 #[derive(Error, Debug)]
 pub enum FfiError {
     #[error("Type resolution error: {0}")]
@@ -37,7 +50,17 @@ impl<'a> FfiGenerator<'a> {
         }
     }
     
-    /// 从函数签名列表生成完整的 FFI 绑定代码
+/// 生成完整的 FFI 绑定代码，包括导入语句、类型定义和函数声明。
+///
+/// 该方法根据提供的函数签名列表，生成可直接用于 Rust 的 FFI 绑定代码。首先收集所有必要的导入语句，
+/// 然后生成依赖的类型定义，最后生成所有函数的 FFI 声明，最终返回完整的代码字符串。
+///
+/// # 参数
+/// - `signatures`: 函数签名列表，类型为 `&[FunctionSignature]`。每个函数签名包含函数名、返回类型和参数列表。
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回生成的 FFI 绑定代码字符串。
+/// - `Err(FfiError)`: 如果生成过程中出现错误（如类型解析失败、映射失败等），返回错误信息。
     pub fn generate_bindings(&mut self, signatures: &[FunctionSignature]) -> Result<String, FfiError> {
         let mut code = String::new();
         
@@ -75,7 +98,17 @@ impl<'a> FfiGenerator<'a> {
         // 这里可以遍历 signatures，检查类型，然后添加需要的导入
     }
     
-    /// 生成所有类型定义
+/// 生成所有依赖的类型定义代码。
+///
+/// 该方法遍历函数签名列表，收集所有依赖的类型（如结构体、联合体等），并生成对应的类型定义代码。
+/// 生成过程中会避免重复生成已处理过的类型。
+///
+/// # 参数
+/// - `signatures`: 函数签名列表，类型为 `&[FunctionSignature]`。每个函数签名包含函数名、返回类型和参数列表。
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回生成的所有类型定义代码字符串。
+/// - `Err(FfiError)`: 如果生成过程中出现错误（如类型解析失败、映射失败等），返回错误信息。
     fn generate_types(&mut self, signatures: &[FunctionSignature]) -> Result<String, FfiError> {
         let mut code = String::new();
         
@@ -105,7 +138,14 @@ impl<'a> FfiGenerator<'a> {
         Ok(code)
     }
     
-    /// 收集类型依赖
+/// 递归收集类型依赖，将复杂类型（如结构体、指针）的名称添加到 `types` 集合中。
+///
+/// 该方法遍历类型信息（`TypeInfo`），如果类型是结构体或指针，则递归收集其依赖的类型名称，
+/// 并将其添加到 `types` 集合中。基本类型（如 `Int`、`Float`）不需要额外处理。
+///
+/// # 参数
+/// - `type_info`: 需要收集依赖的类型信息，类型为 `&TypeInfo`。
+/// - `types`: 用于存储类型名称的集合，类型为 `&mut HashSet<String>`。
     fn collect_type_dependencies(&self, type_info: &dylibsurfer_ir::TypeInfo, types: &mut HashSet<String>) {
         match type_info {
             dylibsurfer_ir::TypeInfo::Struct { name, fields } => {
@@ -230,7 +270,7 @@ mod tests {
     use super::*;
     use crate::mapping::{config::MappingConfig, engine::MappingEngine};
     use dylibsurfer_ir::{IrParser, TypeInfo};
-    use std::path::{PathBuf};
+    use std::path::PathBuf;
 
     // 辅助函数：创建一个测试用的 MappingEngine
     fn create_test_engine() -> MappingEngine {
