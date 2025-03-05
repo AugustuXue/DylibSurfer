@@ -1,0 +1,20 @@
+#![allow(non_snake_case)]
+
+{{#each imports}}
+{{this}}
+{{/each}}
+
+{{#each types}}
+{{definition}}
+{{/each}}
+
+extern "C" {
+{{#each functions}}
+    #[no_mangle]
+    fn {{name}}({{#each parameters}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}) -> {{return_type}};
+{{/each}}
+}
+
+{{#each functions}}
+{{safe_wrapper}}
+{{/each}}

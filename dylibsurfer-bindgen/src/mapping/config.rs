@@ -6,7 +6,7 @@ use std::collections::HashMap;
 ///
 /// 该结构体通过 `Deserialize` 和 `Serialize` trait 实现反序列化和序列化功能，
 /// 使其可以从 JSON、YAML 等数据格式中解析或转换为这些格式。
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MappingConfig {
     /// 基本类型映射表
     pub primitives: HashMap<String, String>,
@@ -20,7 +20,7 @@ pub struct MappingConfig {
     pub safety: SafetyConfig,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct TypeRules {
     pub pointer: PointerRules,
     // 映射 YAML 的 struct 字段
@@ -40,7 +40,7 @@ pub struct TypeRules {
             enabled: true
             rules: [...]
  */
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PointerRules {
     /// 基础指针模板
     pub template: String,
@@ -50,7 +50,7 @@ pub struct PointerRules {
     pub smart_ptr: Option<SmartPtrRules>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SpecialCase {
     /// 别名映射 YAML 的 match 字段
     #[serde(alias = "match")]
@@ -60,13 +60,13 @@ pub struct SpecialCase {
     pub map_to: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SmartPtrRules {
     pub enabled: bool,
     pub rules: Vec<SpecialCase>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct StructRules {
     /// 结构体属性（如 #[repr(C)]）
     pub attributes: Vec<String>,
@@ -76,19 +76,19 @@ pub struct StructRules {
     pub layout: LayoutConfig,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FieldHandling {
     pub naming: String,
     pub visibility: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct LayoutConfig {
     pub respect_alignment: bool,
     pub pack_value: Option<u32>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ArrayRules {
     pub fixed_size: String,
     pub dynamic: String,
@@ -97,7 +97,7 @@ pub struct ArrayRules {
 ///- 字段：
 ///  - `type_names: Vec<TypeNameRule>`：存储多个预处理规则，每个规则是一个 `TypeNameRule`。
 ///- **设计目标**：通过正则表达式和动作的组合，对类型名称进行批量处理（如删除前缀/后缀）。
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PreprocessingRules {
     pub type_names: Vec<TypeNameRule>,
 }
@@ -106,30 +106,30 @@ pub struct PreprocessingRules {
 ///- 字段：
 ///  - `pattern: String`：正则表达式字符串，用于匹配类型名称中的特定模式。
 ///  - `action: String`：指定对匹配内容的处理动作（如 `strip_suffix`、`strip_prefix`）。
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct TypeNameRule {
     pub pattern: String,
     pub action: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ImportConfig {
     pub default: Vec<String>,
     pub conditional: HashMap<String, ConditionalImport>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ConditionalImport {
     pub types: Vec<String>,
     pub import: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SafetyConfig {
     pub unsafe_fn: UnsafeFnConfig,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct UnsafeFnConfig {
     pub add_unsafe: bool,
     pub wrapper_template: String,
