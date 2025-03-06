@@ -112,6 +112,7 @@ impl<'a> FfiGenerator<'a> {
     fn generate_types(&mut self, signatures: &[FunctionSignature]) -> Result<String, FfiError> {
         let mut code = String::new();
         
+        //# todo 这里仅仅收集了类型名称，但没有触发类型解析
         // 收集所有需要生成的类型
         let mut types_to_generate = HashSet::new();
         for sig in signatures {
@@ -161,7 +162,26 @@ impl<'a> FfiGenerator<'a> {
         }
     }
     
-    /// 生成单个类型定义
+/// 生成单个类型定义,具体来说是为给定的类型名称生成 Rust 类型定义。
+///
+/// 该函数尝试使用类型解析器解析提供的类型名称。如果找到类型，则使用映射引擎将其映射为 Rust 类型。
+/// 如果未找到类型或类型为内置类型，则不生成定义。
+///
+/// # 参数
+///
+/// * `type_name` - 需要生成定义的类型名称。
+///
+/// # 返回值
+///
+/// - `Ok(Some(String))`：如果成功生成 Rust 类型定义，返回生成的定义字符串。
+/// - `Ok(None)`：如果不需要生成定义（例如内置类型），返回 `None`。
+/// - `Err(FfiError)`：如果在类型解析或映射过程中发生错误，返回错误信息。
+///
+/// # 错误
+///
+/// 该函数可能返回 `FfiError` 的情况包括：
+/// - 类型解析器无法解析类型。
+/// - 映射引擎无法将解析的类型映射为 Rust 类型。
     fn generate_type_definition(&self, type_name: &str) -> Result<Option<String>, FfiError> {
         // 从类型解析器中查找类型
         if let Some(resolved) = self.type_resolver.lookup_type(type_name) {
@@ -175,7 +195,22 @@ impl<'a> FfiGenerator<'a> {
         Ok(None)
     }
     
-    /// 生成所有函数声明
+/// 为所有给定的函数签名生成 FFI 函数声明代码。
+///
+/// 遍历提供的函数签名列表，逐个生成符合 C ABI 的 Rust 外部函数声明，
+/// 并将所有生成的代码合并为一个字符串返回。生成的函数声明可以直接用于链接动态库。
+///
+/// # 参数
+/// - `signatures`: 函数签名切片，包含需要生成的所有函数信息。
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回合并后的函数声明代码字符串。
+/// - `Err(FfiError)`: 如果任何单个函数声明生成失败，则返回第一个错误。
+///
+/// # 错误
+/// 可能返回以下错误类型：
+/// - `FfiError::TypeResolutionError`: 函数参数/返回类型解析失败
+/// - `FfiError::MappingError`: 类型映射到 Rust 类型失败
     fn generate_functions(&self, signatures: &[FunctionSignature]) -> Result<String, FfiError> {
         let mut code = String::new();
         
@@ -188,7 +223,25 @@ impl<'a> FfiGenerator<'a> {
         Ok(code)
     }
     
-    /// 生成单个函数声明
+/// 为单个函数签名生成 FFI 函数声明代码。
+/// 
+/// 该函数将 C 函数签名转换为符合 Rust FFI 规范的 extern "C" 函数声明。具体流程包括：
+/// 1. 解析函数返回类型的 TypeInfo 为 ResolvedType
+/// 2. 将 ResolvedType 映射为 Rust 类型字符串
+/// 3. 对每个参数重复步骤 1-2
+/// 4. 组合生成完整的函数声明代码
+///
+/// # 参数
+/// - `signature`: 函数签名，包含名称、返回类型和参数列表
+///
+/// # 返回值
+/// - `Ok(String)`: 成功时返回格式化的函数声明字符串
+/// - `Err(FfiError)`: 解析或映射失败时返回错误信息
+///
+/// # 错误
+/// 可能返回以下错误类型：
+/// - `TypeResolutionError`: 类型解析失败（如不支持的复杂类型）
+/// - `MappingError`: 类型映射失败（如无对应的 Rust 类型）
     fn generate_function(&self, signature: &FunctionSignature) -> Result<String, FfiError> {
         // 解析返回类型
         let resolved_return = match self.resolve_type_info(&signature.return_type) {
@@ -242,7 +295,20 @@ impl<'a> FfiGenerator<'a> {
         Ok(Some("// TODO: Generate safe wrapper".to_string()))
     }
     
-    /// 判断是否应该为该函数生成安全包装
+/// 判断是否需要为当前函数生成安全包装函数
+///
+/// 根据函数签名和涉及的类型，判断是否需要在 FFI 声明之外生成额外的 Rust 安全包装。
+/// 当前判断逻辑基于以下启发式规则：
+/// 1. 函数涉及裸指针类型（`ResolvedType::Pointer`）
+/// 2. 函数名称包含内存管理相关关键词（alloc/free/create/destroy）
+///
+/// # 参数
+/// - `signature`: 原始函数签名信息
+/// - `resolved_types`: 已解析的函数参数/返回类型列表
+///
+/// # 返回值
+/// - `true`: 需要生成安全包装
+/// - `false`: 直接使用原始 FFI 声明即可
     #[allow(dead_code)]
     fn should_generate_wrapper(&self, signature: &FunctionSignature, resolved_types: &[ResolvedType]) -> bool {
         // 检查是否包含需要特殊处理的类型 (如裸指针)
