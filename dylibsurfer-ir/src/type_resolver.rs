@@ -127,8 +127,8 @@ impl PrimitiveType {
 
 //解析和缓存类型信息
 pub struct ThreadSafeTypeResolver {
-    // 使用 Arc<RwLock> 实现线程安全的类型缓存
-    //类型缓存，用于存储已解析的类型，避免重复解析相同的类型，提高解析效率；支持类型别名的解析（通过查找缓存中的实际类型）
+    /// 使用 Arc<RwLock> 实现线程安全的类型缓存
+    ///类型缓存，用于存储已解析的类型，避免重复解析相同的类型，提高解析效率；支持类型别名的解析（通过查找缓存中的实际类型）
     type_cache: Arc<RwLock<HashMap<String, ResolvedType>>>,
     // 使用 ThreadLocal 为每个线程维护独立的进度栈
     //正在解析的类型栈，用于跟踪当前正在解析的类型
@@ -149,7 +149,7 @@ impl ThreadSafeTypeResolver {
         }
     }
 
-    //将 TypeInfo（从 LLVM IR 解析出的类型信息）转换为 ResolvedType（完全解析后的类型信息）
+    ///将 TypeInfo（从 LLVM IR 解析出的类型信息）转换为 ResolvedType（完全解析后的类型信息）
     pub fn resolve_type(&self, type_info: &TypeInfo) -> Result<ResolvedType, TypeResolveError> {
         match type_info {
             TypeInfo::Void => Ok(ResolvedType::Void),
@@ -274,13 +274,13 @@ impl ThreadSafeTypeResolver {
         }
     }
 
-    //将一个已解析的类型（ResolvedType）注册到类型缓存中
+    ///将一个已解析的类型（ResolvedType）注册到类型缓存中
     pub fn register_type(&self, name: String, ty: ResolvedType) {
         let mut cache = self.type_cache.write();
         cache.insert(name, ty);
     }
 
-    //从类型缓存中查找指定名称的类型，并返回其对应的已解析类型（ResolvedType）
+    ///从类型缓存中查找指定名称的类型，并返回其对应的已解析类型（ResolvedType）
     pub fn lookup_type(&self, name: &str) -> Option<ResolvedType> {
         let cache = self.type_cache.read();
         cache.get(name).cloned()
