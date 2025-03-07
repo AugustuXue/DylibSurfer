@@ -1,7 +1,7 @@
 //! 核心 FFI 绑定生成器，负责生成与 C ABI 兼容的 Rust 外部函数声明。
 
 use crate::mapping::engine::MappingEngine;
-use dylibsurfer_ir::{FunctionSignature, ResolvedType, TypeResolveError, ThreadSafeTypeResolver};
+use dylibsurfer_ir::{FunctionSignature, TypeResolveError};
 use std::collections::HashSet;
 use std::path::Path;
 use thiserror::Error;
@@ -44,8 +44,6 @@ pub struct FfiGenerator<'a> {
     mapping_engine: &'a MappingEngine,
     /// 类型生成器，用于生成类型定义
     type_generator: TypeGenerator<'a>,
-    /// 类型解析器，用于解析和缓存类型信息
-    type_resolver: ThreadSafeTypeResolver,
     /// 已生成的类型集合，避免重复生成
     generated_types: HashSet<String>,
 }
@@ -56,7 +54,6 @@ impl<'a> FfiGenerator<'a> {
         Self {
             mapping_engine,
             type_generator: TypeGenerator::new(mapping_engine),
-            type_resolver: ThreadSafeTypeResolver::new(),
             generated_types: HashSet::new(),
         }
     }
@@ -160,10 +157,9 @@ impl<'a> FfiGenerator<'a> {
                 continue;
             }
             
-            // 根据类型名称生成类型定义
-            if let Some(resolved) = self.type_resolver.lookup_type(&type_name) {
-                let type_def = self.type_generator.generate_type_definition(&resolved)
-                    .map_err(|e| FfiError::MappingError(e.to_string()))?;
+            // 使用 TypeGenerator 从类型名称生成类型定义
+            if let Some(type_def) = self.type_generator.generate_type_from_name(&type_name)
+                .map_err(|e| FfiError::MappingError(e.to_string()))? {
                 
                 code.push_str(&type_def);
                 code.push_str("\n\n");
@@ -246,7 +242,7 @@ impl<'a> FfiGenerator<'a> {
     /// - `MappingError`: 类型映射失败（如无对应的 Rust 类型）
     fn generate_function(&self, signature: &FunctionSignature) -> Result<String, FfiError> {
         // 解析返回类型
-        let resolved_return = match self.resolve_type_info(&signature.return_type) {
+        let resolved_return = match self.type_generator.resolve_type_info(&signature.return_type) {
             Ok(r) => r,
             Err(e) => return Err(FfiError::TypeResolutionError(e)),
         };
@@ -257,7 +253,7 @@ impl<'a> FfiGenerator<'a> {
         // 构建参数列表
         let mut params = Vec::new();
         for param in &signature.parameters {
-            let resolved_param = match self.resolve_type_info(&param.ty) {
+            let resolved_param = match self.type_generator.resolve_type_info(&param.ty) {
                 Ok(r) => r,
                 Err(e) => return Err(FfiError::TypeResolutionError(e)),
             };
@@ -278,11 +274,7 @@ impl<'a> FfiGenerator<'a> {
         
         Ok(fn_declaration)
     }
-    
-    /// 将 TypeInfo 解析为 ResolvedType
-    fn resolve_type_info(&self, type_info: &dylibsurfer_ir::TypeInfo) -> Result<ResolvedType, TypeResolveError> {
-        self.type_resolver.resolve_type(type_info)
-    }
+
 }
 
 #[cfg(test)]

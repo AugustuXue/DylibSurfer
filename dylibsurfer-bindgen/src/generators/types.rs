@@ -60,7 +60,29 @@ impl<'a> TypeGenerator<'a> {
     pub fn is_type_generated(&self, type_name: &str) -> bool {
         self.generated_types.contains(type_name)
     }
+
+        // 添加从类型名称生成类型的方法
+        pub fn generate_type_from_name(&self, type_name: &str) -> Result<Option<String>, TypeGenError> {
+            // 从类型解析器中查找类型
+            if let Some(resolved) = self.type_resolver.lookup_type(type_name) {
+                // 使用映射引擎将解析的类型映射到 Rust 类型
+                let rust_type = self.mapping_engine.map_type(&resolved)
+                    .map_err(|e| TypeGenError::MappingError(e.to_string()))?;
+                return Ok(Some(rust_type));
+            }
+            
+            // 如果是内置类型，可能不需要额外定义
+            Ok(None)
+        }
+        
+        // 添加TypeInfo解析方法
+        pub fn resolve_type_info(&self, type_info: &dylibsurfer_ir::TypeInfo) -> Result<ResolvedType, TypeResolveError> {
+            self.type_resolver.resolve_type(type_info)
+        }
+
+    
 }
+
 
 #[cfg(test)]
 mod tests {
