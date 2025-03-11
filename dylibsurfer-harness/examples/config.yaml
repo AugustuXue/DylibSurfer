@@ -1,0 +1,25 @@
+general:
+  project_name: "libpng_fuzz"
+  generate_safe_wrappers: true
+  max_harnesses: 50
+
+function_selection:
+  include_patterns:
+    - "png_*"
+  exclude_patterns:
+    - "*_internal"
+  min_interest_score: 0.6
+
+template:
+  format_code: true
+  custom_templates:
+    custom_harness: |
+      // 为 {{function_name}} 生成的自定义 harness
+      fn harness_{{function_name}}(data: &[u8]) -> bool {
+          // 自定义实现
+          true
+      }
+
+type_handling:
+  max_buffer_size: 8192
+  use_smart_pointers: true

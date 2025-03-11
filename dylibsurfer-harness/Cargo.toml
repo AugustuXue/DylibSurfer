@@ -1,0 +1,20 @@
+[package]
+name = "dylibsurfer-harness"
+version = "0.1.0"
+edition = "2021"
+description = "动态链接库模糊测试框架的 Harness 生成器"
+authors = ["augustu <augustus.xue@gmail.com>"]
+license = "MIT"
+
+[dependencies]
+dylibsurfer-ir = { path = "../dylibsurfer-ir" }
+dylibsurfer-bindgen = { path = "../dylibsurfer-bindgen" }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1.0"
+thiserror = "1.0"
+handlebars = "4.3"
+log = "0.4"
+env_logger = "0.10"
+regex = "1.7"
+clap = { version = "4.1", features = ["derive"] }
