@@ -42,7 +42,7 @@ pub struct GeneralConfig {
 /// 函数选择设置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionSelectionConfig {
-    /// 包含的函数名称模式
+    /// 包含的函数名称模式:通过正则模式来筛选需要生成harness的目标函数
     #[serde(default)]
     pub include_patterns: Vec<String>,
     
@@ -78,7 +78,7 @@ pub struct TypeHandlingConfig {
     #[serde(default = "default_max_buffer_size")]
     pub max_buffer_size: usize,
     
-    /// 自定义类型处理器（按类型名称）
+    /// 自定义类型处理器（按类型名称）​键 (Key)：需要自定义处理的完整类型名称 ​值 (Value)：自定义处理器的实现路径
     #[serde(default)]
     pub custom_handlers: HashMap<String, String>,
     

@@ -11,7 +11,7 @@ pub type TemplateContext = HashMap<String, serde_json::Value>;
 
 /// Harness 生成模板引擎
 pub struct TemplateEngine<'reg> {
-    /// Handlebars 注册表
+    /// Handlebars 注册表，模板渲染引擎核心
     registry: Handlebars<'reg>,
     
     /// 内置模板
@@ -48,39 +48,39 @@ impl<'reg> TemplateEngine<'reg> {
         Ok(())
     }
     
-/// 从目录注册模板
-/// 
-/// # 参数
-/// * `dir` - 包含模板文件的目录
-/// 
-/// # 返回值
-/// * `Ok(())` - 模板注册成功
-/// * `Err(HarnessError)` - 注册模板失败时的错误
-pub fn register_templates_dir(&mut self, dir: &Path) -> Result<(), HarnessError> {
-    if !dir.exists() || !dir.is_dir() {
-        return Err(HarnessError::TemplateError(format!("目录不存在或不是目录: {:?}", dir)));
-    }
-    
-    // 手动遍历目录中的文件
-    for entry in std::fs::read_dir(dir).map_err(|e| HarnessError::IoError(e))? {
-        let entry = entry.map_err(|e| HarnessError::IoError(e))?;
-        let path = entry.path();
-        
-        // 只处理 .hbs 文件
-        if path.is_file() && path.extension().map_or(false, |ext| ext == "hbs") {
-            let name = path.file_stem()
-                .and_then(|s| s.to_str())
-                .ok_or_else(|| HarnessError::TemplateError(format!("无效的文件名: {:?}", path)))?;
-            
-            let content = std::fs::read_to_string(&path)
-                .map_err(|e| HarnessError::IoError(e))?;
-            
-            self.register_template_string(name, &content)?;
+    /// 从目录注册模板
+    /// 
+    /// # 参数
+    /// * `dir` - 包含模板文件的目录
+    /// 
+    /// # 返回值
+    /// * `Ok(())` - 模板注册成功
+    /// * `Err(HarnessError)` - 注册模板失败时的错误
+    pub fn register_templates_dir(&mut self, dir: &Path) -> Result<(), HarnessError> {
+        if !dir.exists() || !dir.is_dir() {
+            return Err(HarnessError::TemplateError(format!("目录不存在或不是目录: {:?}", dir)));
         }
-    }
     
-    Ok(())
-}
+        // 手动遍历目录中的文件
+        for entry in std::fs::read_dir(dir).map_err(|e| HarnessError::IoError(e))? {
+            let entry = entry.map_err(|e| HarnessError::IoError(e))?;
+            let path = entry.path();
+        
+            // 只处理 .hbs 文件
+            if path.is_file() && path.extension().map_or(false, |ext| ext == "hbs") {
+                let name = path.file_stem()
+                    .and_then(|s| s.to_str())
+                    .ok_or_else(|| HarnessError::TemplateError(format!("无效的文件名: {:?}", path)))?;
+                
+                let content = std::fs::read_to_string(&path)
+                    .map_err(|e| HarnessError::IoError(e))?;
+                
+                self.register_template_string(name, &content)?;
+            }
+        }
+        
+        Ok(())
+    }
 
     
     /// 渲染模板
