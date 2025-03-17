@@ -8,6 +8,7 @@ pub mod config;
 pub mod template;
 pub mod generator;
 pub mod utils;
+pub mod analyzer;
 
 use dylibsurfer_ir::FunctionSignature;
 use std::path::Path;

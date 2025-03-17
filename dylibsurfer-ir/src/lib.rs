@@ -26,7 +26,7 @@ impl std::error::Error for IrError {}
 */
 }
 //Serialize: 来自 serde crate，允许结构体被序列化为 JSON、YAML 等格式：let json = serde_json::to_string(&sig).unwrap(); // 将结构体转换为 JSON 字符串
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize,Clone)]
 //表示函数签名信息
 pub struct FunctionSignature {
     //函数名称
@@ -37,7 +37,7 @@ pub struct FunctionSignature {
     pub parameters: Vec<Parameter>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize,Clone)]
 //表示函数参数
 pub struct Parameter {
     //参数名称
