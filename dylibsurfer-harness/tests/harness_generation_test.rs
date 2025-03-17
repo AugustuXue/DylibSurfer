@@ -33,7 +33,6 @@ fn test_basic_harness_generation() -> Result<(), Box<dyn std::error::Error>> {
     // 4. 创建harness生成器并生成harness
     let generator = HarnessGenerator::new(&config);
     let harness_code = generator.generate_harness(&signature)?;
-    
     // 5. 验证生成的代码包含关键元素
     assert!(harness_code.contains("fn harness_test_function"));
     assert!(harness_code.contains("extract_pointer_from_data"));
