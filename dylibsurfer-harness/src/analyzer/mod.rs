@@ -3,7 +3,7 @@
 //! 该模块提供了分析库、构建依赖图、评估函数可测试性以及选择最有前途的函数进行模糊测试的功能。
 
 mod graph;
-// mod testability;
+mod testability;
 // mod security;
 // mod selection;
 // mod visualization;
