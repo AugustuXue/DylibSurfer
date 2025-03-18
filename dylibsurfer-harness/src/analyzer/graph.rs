@@ -337,3 +337,55 @@ impl DependencyGraphBuilder {
         }
     }
 }
+
+impl DependencyGraph {
+
+    /// 获取图中所有函数的集合
+    pub fn get_all_functions(&self) -> Vec<FunctionId> {
+        self.function_nodes.keys().cloned().collect()
+    }
+    
+    /// 获取图中所有类型的集合
+    pub fn get_all_types(&self) -> Vec<TypeId> {
+        self.type_nodes.keys().cloned().collect()
+    }
+    
+    /// 获取所有生成边，以(函数ID, 类型ID)对形式返回
+    pub fn get_produces_edges(&self) -> Vec<(FunctionId, TypeId)> {
+        let mut edges = Vec::new();
+        
+        for (type_id, producers) in &self.type_producers {
+            for function_id in producers {
+                edges.push((function_id.clone(), type_id.clone()));
+            }
+        }
+        
+        edges
+    }
+    
+    /// 获取所有消费边，以(函数ID, 类型ID)对形式返回
+    pub fn get_consumes_edges(&self) -> Vec<(FunctionId, TypeId)> {
+        let mut edges = Vec::new();
+        
+        for (type_id, consumers) in &self.type_consumers {
+            for function_id in consumers {
+                edges.push((function_id.clone(), type_id.clone()));
+            }
+        }
+        
+        edges
+    }
+    
+    /// 获取所有修改边，以(函数ID, 类型ID)对形式返回
+    pub fn get_modifies_edges(&self) -> Vec<(FunctionId, TypeId)> {
+        let mut edges = Vec::new();
+        
+        for (type_id, modifiers) in &self.type_modifiers {
+            for function_id in modifiers {
+                edges.push((function_id.clone(), type_id.clone()));
+            }
+        }
+        
+        edges
+    }
+}
