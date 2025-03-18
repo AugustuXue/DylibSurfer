@@ -4,7 +4,7 @@
 
 mod graph;
 mod testability;
-// mod security;
+mod security;
 // mod selection;
 // mod visualization;
 
