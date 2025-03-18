@@ -5,11 +5,11 @@
 mod graph;
 mod testability;
 mod security;
-// mod selection;
+mod selection;
 // mod visualization;
 
 // // 重新导出主要组件
-// pub use graph::{DependencyGraph, DependencyGraphBuilder, FunctionId, TypeId};
-// pub use testability::{FunctionTestability, TypeGraph, ConstructibilityAnalyzer};
-// pub use security::{SecurityInterestScorer, SecurityScore, VulnPattern};
-// pub use selection::{FunctionSelector, FunctionBundle, SelectionConfig};
+pub use graph::{DependencyGraph, DependencyGraphBuilder, FunctionId, TypeId};
+pub use testability::{FunctionTestability, TypeGraph, ConstructibilityAnalyzer};
+pub use security::{SecurityInterestScorer, SecurityScore, VulnPattern};
+pub use selection::{FunctionSelector, FunctionBundle, SelectionConfig};
