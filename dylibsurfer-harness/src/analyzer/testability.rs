@@ -6,7 +6,6 @@ use std::collections::{HashMap, HashSet};
 use petgraph::graph::{DiGraph, NodeIndex};
 use dylibsurfer_ir::{FunctionSignature, TypeInfo};
 use crate::analyzer::graph::{DependencyGraph, TypeId, FunctionId};
-use crate::error::HarnessError;
 
 /// 用于分析复杂参数构建的类型图
 pub struct TypeGraph {
@@ -22,9 +21,9 @@ pub struct TypeGraph {
 #[derive(Debug, Clone)]
 struct TypeNode {
     /// 类型ID
-    id: TypeId,
+    _id: TypeId,
     /// 类型信息
-    type_info: TypeInfo,
+    _type_info: TypeInfo,
 }
 
 /// 关于类型的元数据
@@ -80,8 +79,8 @@ impl TypeGraph {
         }
         // 添加类型节点
         let node_idx = self.graph.add_node(TypeNode {
-            id: type_id.clone(),
-            type_info: type_info.clone(),
+            _id: type_id.clone(),
+            _type_info: type_info.clone(),
         });
         self.type_nodes.insert(type_id.clone(), node_idx);
         // 计算类型元数据

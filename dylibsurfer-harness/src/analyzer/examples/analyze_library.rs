@@ -1,9 +1,8 @@
 //! Example demonstrating how to use the analyzer components together
 
 use std::path::Path;
-use dylibsurfer_ir::{IrParser, FunctionSignature};
+use dylibsurfer_ir::IrParser;
 use dylibsurfer_harness::{
-    config::FunctionSelectionConfig,
     analyzer::{
         DependencyGraphBuilder,
         ConstructibilityAnalyzer,
@@ -20,15 +19,20 @@ use dylibsurfer_harness::{
 
 fn main() -> Result<(), HarnessError> {
     // Parse the LLVM IR file
-    let ir_path = Path::new("testdata/libpng.ll");
+    let ir_path = Path::new("dylibsurfer-harness/tests/testdata/png.ll");
     let parser = IrParser::new();
     let signatures = parser.parse_ir_file(ir_path)?;
+    let limited_signatures = if signatures.len() > 100 {
+        &signatures[0..100]
+    } else {
+        &signatures
+    };
     
-    println!("Parsed {} function signatures", signatures.len());
+    println!("Parsed {} function signatures", limited_signatures.len());
     
     // Build the dependency graph
     let graph_builder = DependencyGraphBuilder::new();
-    let dependency_graph = graph_builder.build(&signatures)?;
+    let dependency_graph = graph_builder.build(&limited_signatures)?;
     
     println!("Built dependency graph with {} functions and {} types",
              dependency_graph.get_all_functions().len(),
@@ -36,13 +40,13 @@ fn main() -> Result<(), HarnessError> {
     
     // Analyze function testability
     let mut constructibility_analyzer = ConstructibilityAnalyzer::new(dependency_graph.clone());
-    let testability_results = constructibility_analyzer.analyze_functions(&signatures);
+    let testability_results = constructibility_analyzer.analyze_functions(&limited_signatures);
     
     println!("Analyzed testability for {} functions", testability_results.len());
     
     // Score functions for security interest
     let security_scorer = SecurityInterestScorer::new()?;
-    let security_scores = security_scorer.score_functions(&signatures);
+    let security_scores = security_scorer.score_functions(&limited_signatures);
     
     println!("Scored {} functions for security interest", security_scores.len());
     
@@ -68,7 +72,7 @@ fn main() -> Result<(), HarnessError> {
     );
     
     let selected_bundles = function_selector.select_functions(
-        &signatures, 
+        &limited_signatures, 
         &selection_config
     )?;
     

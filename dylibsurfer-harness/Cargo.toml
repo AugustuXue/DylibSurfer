@@ -25,4 +25,4 @@ tempfile = "3.3"
 
 [[example]]
 name = "analyze_library"
-path = "examples/analyze_library.rs"
+path = "src/analyzer/examples/analyze_library.rs"

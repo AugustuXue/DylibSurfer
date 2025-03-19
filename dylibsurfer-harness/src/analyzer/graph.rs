@@ -4,7 +4,6 @@
 
 use std::collections::{HashMap, HashSet};
 use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::Direction;
 use dylibsurfer_ir::{FunctionSignature, TypeInfo};
 use crate::error::HarnessError;
 
@@ -24,12 +23,13 @@ pub enum EdgeKind {
     /// 函数修改此类型（改变状态）
     Modifies,
     /// 函数调用另一个函数
-    Calls,
+    _Calls,
     /// 类型包含另一个类型（字段/元素）
-    Contains,
+    _Contains,
 }
 
 /// 库函数和类型的依赖图
+#[derive(Clone)]
 pub struct DependencyGraph {
     /// 连接函数和类型的图结构
     graph: DiGraph<NodeData, EdgeKind>,
@@ -51,6 +51,7 @@ pub enum NodeData {
     /// 函数节点
     Function(FunctionSignature),
     /// 类型节点
+    #[allow(dead_code)]
     Type(TypeInfo),
 }
 
@@ -281,9 +282,9 @@ impl DependencyGraphBuilder {
         // 第一遍：将所有函数和类型添加到图中
         for function in functions {
             // 添加函数节点
-            let func_node = graph.add_function(function.clone());
+            let _func_node = graph.add_function(function.clone());
             // 添加返回类型
-            let ret_type_node = graph.add_type(function.return_type.clone());
+            let _ret_type_node = graph.add_type(function.return_type.clone());
             // 连接函数到返回类型（生成）
             if !matches!(function.return_type, TypeInfo::Void) {
                 let ret_type_id = DependencyGraph::get_type_id(&function.return_type);
@@ -291,7 +292,7 @@ impl DependencyGraphBuilder {
             }
             // 添加参数类型
             for param in &function.parameters {
-                let param_type_node = graph.add_type(param.ty.clone());
+                let _param_type_node = graph.add_type(param.ty.clone());
                 // 连接函数到参数类型（消费）
                 let param_type_id = DependencyGraph::get_type_id(&param.ty);
                 graph.add_consumes_edge(&function.name, &param_type_id);

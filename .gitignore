@@ -5,3 +5,8 @@
 
 # IDE specific files
 .vscode/
+
+# 生成文件过滤
+/output.txt
+/analysis_output/
+.gdb_history

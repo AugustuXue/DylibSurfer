@@ -2,12 +2,11 @@
 //!
 //! 根据可测试性、安全关注度和其他标准选择最适合模糊测试的函数
 
-use std::collections::{HashMap, HashSet};
 use regex::Regex;
 use dylibsurfer_ir::FunctionSignature;
 use crate::analyzer::graph::{DependencyGraph, FunctionId};
-use crate::analyzer::testability::{ConstructibilityAnalyzer, FunctionTestability};
-use crate::analyzer::security::{SecurityInterestScorer, SecurityScore};
+use crate::analyzer::testability::ConstructibilityAnalyzer;
+use crate::analyzer::security::SecurityInterestScorer;
 use crate::config::FunctionSelectionConfig;
 use crate::error::HarnessError;
 

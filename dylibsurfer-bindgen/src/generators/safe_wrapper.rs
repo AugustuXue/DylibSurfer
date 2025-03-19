@@ -17,14 +17,14 @@ pub enum WrapperError {
 /// 安全包装生成器，负责为不安全的 FFI 函数生成安全的 Rust 包装函数
 pub struct SafeWrapperGenerator<'a> {
     /// 映射引擎，用于将 ResolvedType 映射为 Rust 类型
-    mapping_engine: &'a MappingEngine,
+    _mapping_engine: &'a MappingEngine,
 }
 
 impl<'a> SafeWrapperGenerator<'a> {
     /// 创建新的安全包装生成器实例
     pub fn new(mapping_engine: &'a MappingEngine) -> Self {
         Self {
-            mapping_engine,
+            _mapping_engine: mapping_engine,
         }
     }
     
