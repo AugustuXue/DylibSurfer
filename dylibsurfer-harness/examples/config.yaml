@@ -8,7 +8,7 @@ function_selection:
     - "png_*"
   exclude_patterns:
     - "*_internal"
-  min_interest_score: 0.6
+  min_interest_score: 0.3
 
 template:
   format_code: true

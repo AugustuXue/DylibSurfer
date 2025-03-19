@@ -52,8 +52,8 @@ fn main() -> Result<(), HarnessError> {
     
     // Configure function selection
     let selection_config = SelectionConfig {
-        min_security_score: 50,  // Only consider functions with score >= 50
-        max_complexity: 80,      // Limit complexity to 80
+        min_security_score: 30,  // Only consider functions with score >= 50
+        max_complexity: 85,      // Limit complexity to 80
         include_patterns: vec![
             regex::Regex::new("png_.*").unwrap(),  // Include all png_ functions
         ],
