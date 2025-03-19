@@ -29,7 +29,7 @@ DylibSurfer is composed of three main components:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/DylibSurfer.git
+git clone https://github.com/AugustuXue/DylibSurfer.git
 cd DylibSurfer
 
 # Build the project

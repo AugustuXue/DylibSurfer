@@ -28,7 +28,7 @@ DylibSurfer 由三个主要组件组成：
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/DylibSurfer.git
+git clone https://github.com/AugustuXue/DylibSurfer.git
 cd DylibSurfer
 
 # 构建项目
