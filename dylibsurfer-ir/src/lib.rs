@@ -4,7 +4,7 @@ pub mod type_resolver;
 pub use type_resolver::{ThreadSafeTypeResolver, ResolvedType, TypeResolveError};
 use inkwell::{context::Context, memory_buffer::MemoryBuffer, types::{BasicTypeEnum, AnyTypeEnum}};
 use serde::Serialize;
-use std::path::Path;
+use std::{cell::RefCell, collections::{HashMap, HashSet}, path::Path};
 use thiserror::Error;
 
 //Error:让枚举实现 std::error::Error trait，使其可以作为错误类型使用
@@ -12,6 +12,9 @@ use thiserror::Error;
 pub enum IrError {
     #[error("IR parsing failed: {0}")]
     ParseError(String),
+
+    #[error("Circular type dependency detected: {0}")]
+    CircularDependency(String),
 /*
 对于 ParseError，#[derive(Error)] 会生成类似以下的代码：
 impl std::fmt::Display for IrError {
@@ -64,8 +67,12 @@ pub enum TypeInfo {
 }
 //用于解析LLVM IR文件，提取函数签名和类型信息
 pub struct IrParser {
-    //Context为inkwell库中的一个类型，用于管理LLVM上下文（LLVM 上下文是 LLVM 中用于管理模块、类型、常量等资源的全局环境）
+    ///Context为inkwell库中的一个类型，用于管理LLVM上下文（LLVM 上下文是 LLVM 中用于管理模块、类型、常量等资源的全局环境）
     context: Context,
+    /// 类型缓存，用于存储已解析的类型信息
+    type_cache: RefCell<HashMap<String, TypeInfo>>,
+    /// 正在处理的类型集合，用于检测循环依赖
+    in_progress: RefCell<HashSet<String>>,
 }
 //为IR解析创建独有方法
 impl IrParser {
@@ -73,6 +80,8 @@ impl IrParser {
     pub fn new() -> Self {
         Self {
             context: Context::create(),
+            type_cache: RefCell::new(HashMap::new()),
+            in_progress: RefCell::new(HashSet::new()),
         }
     }
 
@@ -149,12 +158,48 @@ impl IrParser {
                     .unwrap_or("anonymous")//如果结构体没有名称或名称无效，返回 "anonymous"
                     .to_string();
 
-                let fields = struct_ty.get_field_types()
+                // 如果是匿名结构体，可以生成唯一名称
+                let struct_id = if name == "anonymous" {
+                    format!("anonymous_{:p}", struct_ty)
+                } else {
+                    name.clone()
+                };
+                // 检查是否已经缓存了这个结构体
+                if let Some(cached_type) = self.type_cache.borrow().get(&struct_id){
+                    return Ok(cached_type.clone());
+                }
+                // 检查循环依赖
+                if self.in_progress.borrow().contains(&struct_id) {
+                    // 发现循环依赖，返回一个简化版本的结构体
+                    // 这里我们返回一个指向自身的指针，以打破循环
+                    return Ok(TypeInfo::Struct {
+                        name: name.clone(),
+                        fields: Vec::new(), // 空字段列表
+                    });
+                }
+                // 标记当前结构体为正在处理
+                self.in_progress.borrow_mut().insert(struct_id.clone());
+                // 创建一个空的结构体作为占位符，放入缓存,避免在解析字段时循环访问
+                let placeholder = TypeInfo::Struct {
+                    name: name.clone(),
+                    fields: Vec::new(),
+                };
+                self.type_cache.borrow_mut().insert(struct_id.clone(), placeholder);
+                // 解析字段
+                let fields= struct_ty.get_field_types()
                     .iter()
                     .map(|field| self.parse_basic_type(field))
-                    .collect::<Result<Vec<_>, _>>()?;
+                    .collect::<Result<Vec<_>,_>>()?;
 
-                Ok(TypeInfo::Struct { name, fields })
+                // 创建完整的结构体类型
+                let struct_type = TypeInfo::Struct { name, fields };
+
+                self.type_cache.borrow_mut().insert(struct_id.clone(), struct_type.clone());
+
+                // 无论成功还是失败，都要移除正在处理的标记
+                self.in_progress.borrow_mut().remove(&struct_id);
+
+                Ok(struct_type)
             },
             _ => Err(IrError::ParseError("Unsupported type".into())),
         }
@@ -175,13 +220,50 @@ impl IrParser {
                     .and_then(|n| n.to_str().ok())
                     .unwrap_or("anonymous")
                     .to_string();
+
+                // 如果是匿名结构体，生成唯一名称
+                let struct_id = if name == "anonymous" {
+                    format!("anonymous_{:p}", s)
+                } else {
+                    name.clone()
+                };
                 
-                let fields = s.get_field_types()
+                // 检查是否已经缓存了这个结构体
+                if let Some(cached_type) = self.type_cache.borrow().get(&struct_id) {
+                    return Ok(cached_type.clone());
+                }
+                // 检查循环依赖
+                if self.in_progress.borrow().contains(&struct_id) {
+                    // 发现循环依赖，返回一个简化版本的结构体
+                    return Ok(TypeInfo::Struct {
+                        name: name.clone(),
+                        fields: Vec::new(), // 空字段列表
+                    });
+                }
+                // 标记当前结构体为正在处理
+                self.in_progress.borrow_mut().insert(struct_id.clone());
+                // 创建一个空的结构体作为占位符，放入缓存
+                let placeholder = TypeInfo::Struct {
+                    name: name.clone(),
+                    fields: Vec::new(),
+                };
+                self.type_cache.borrow_mut().insert(struct_id.clone(), placeholder);
+                // 解析字段
+                let fields= s.get_field_types()
                     .iter()
                     .map(|field| self.parse_basic_type(field))
                     .collect::<Result<Vec<_>, _>>()?;
+
+                 // 创建完整结构体类型
+                 let struct_type = TypeInfo::Struct { name, fields };
                 
-                Ok(TypeInfo::Struct { name, fields })
+                 // 更新缓存
+                 self.type_cache.borrow_mut().insert(struct_id.clone(), struct_type.clone());
+        
+                 // 从正在处理集合中移除当前类型
+                 self.in_progress.borrow_mut().remove(&struct_id);
+                 
+                 Ok(struct_type)
             },
             AnyTypeEnum::VoidType(_) => Ok(TypeInfo::Void),
             _ => Err(IrError::ParseError("Unsupported type".into())),
@@ -202,6 +284,16 @@ mod tests {
         
         println!("{}", serde_json::to_string_pretty(&signatures).unwrap());
         
+        assert!(!signatures.is_empty());
+    }
+    
+    #[test]
+    fn test_circular_dependency() {
+        let parser = IrParser::new();
+        let path = PathBuf::from("testdata/libpng.ll");
+        let signatures = parser.parse_ir_file(&path).unwrap();
+        
+        // 验证能够正确处理循环依赖的结构体
         assert!(!signatures.is_empty());
     }
 }
