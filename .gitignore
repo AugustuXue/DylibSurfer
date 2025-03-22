@@ -8,5 +8,6 @@
 
 # 生成文件过滤
 /output.txt
+/examples/output/
 /analysis_output/
 .gdb_history

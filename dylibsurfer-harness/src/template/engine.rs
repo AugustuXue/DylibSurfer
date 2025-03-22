@@ -96,7 +96,10 @@ impl<'reg> TemplateEngine<'reg> {
         self.registry.render(name, context)
             .map_err(|e| HarnessError::TemplateError(format!("渲染模板 '{}' 失败: {}", name, e)))
     }
-    
+    /// 检查模板是否存在
+    pub fn has_template(&self, name: &str) -> bool {
+        self.registry.has_template(name)
+    }
     /// 注册内置模板
     fn register_built_in_templates(&mut self) {
         // 基本 harness 模板
@@ -139,6 +142,41 @@ fn harness_{{function_name}}(data: &[u8]) -> bool {
     true
 }
 "#.to_string());
+    // 增强型 harness 模板
+    self.built_in_templates.insert("enhanced_harness".to_string(), r#"
+    fn harness_{{function_name}}(data: &[u8]) -> bool {
+        // 检查最小数据大小
+        if data.len() < {{min_data_size}} {
+            return false;  
+        }
+        
+        // 创建资源管理器
+        let mut resource_manager = ResourceManager::new();
+        
+        // 初始化光标位置
+        let mut cursor = 0;
+        
+        // 提取参数
+        {{param_extractors}}
+        
+        // 使用异常捕获执行目标函数
+        let result = std::panic::catch_unwind(|| {
+            unsafe {
+                {{lib_name}}::{{function_name}}(
+                    {{#each parameters}}
+                    {{name}}{{#unless @last}},{{/unless}}
+                    {{/each}}
+                )
+            }
+        });
+        
+        // 清理所有分配的资源
+        resource_manager.cleanup_all();
+        
+        // 如果函数执行未崩溃，则返回true
+        result.is_ok()
+    }
+    "#.to_string());
     // 先收集所有需要注册的模板
     let templates_to_register: Vec<(String, String)> = self.built_in_templates
         .iter()
