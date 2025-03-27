@@ -5,7 +5,7 @@
 
 ## 概述
 
-DylibSurfer 是一个综合性框架，旨在简化和增强 C/C++ 动态链接库的模糊测试过程。它通过分析 LLVM IR 并生成适当的 Rust 绑定和 harness 代码，自动化了创建模糊测试 harness 的繁琐过程，项最终目标是利用LibAFL框架实现自动化的模糊测试。
+DylibSurfer 是一个综合性框架，旨在简化和增强 C/C++ 动态链接库的模糊测试过程。它通过分析 LLVM IR 并生成适当的 Rust 绑定和 harness 代码，自动化了创建模糊测试 harness 的繁琐过程，最终目标是利用LibAFL框架实现自动化的模糊测试。
 
 ## 项目结构
 
