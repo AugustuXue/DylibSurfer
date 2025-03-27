@@ -6,7 +6,7 @@ A dynamic library fuzzing framework focused on automated harness generation for 
 
 ## Overview
 
-DylibSurfer is a comprehensive framework designed to simplify and enhance the process of fuzzing C/C++ dynamic libraries. It automates the tedious process of creating fuzz harnesses by analyzing LLVM IR and generating appropriate Rust bindings and harness code.
+DylibSurfer is a comprehensive framework designed to simplify and enhance the process of fuzzing C/C++ dynamic libraries. It automates the tedious process of creating fuzz harnesses by analyzing LLVM IR and generating appropriate Rust bindings and harness code.The ultimate goal of the project is to achieve automated fuzz testing based on the LibAFL framework.
 
 ## Project Structure
 
