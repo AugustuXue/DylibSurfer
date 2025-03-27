@@ -69,20 +69,6 @@ cargo run --bin harness-gen -- generate --ir-file library.ll --output ./output -
 
 - [x] Phase 1: Core Architecture - Basic structure, configuration system, and template engine
 - [x] Phase 2: Function Selection System - Dependency analysis, testability analysis, and security scoring
-- [ ] Phase 3: Input Transformation System - Type extraction helpers, resource management, and state tracking
-- [ ] Phase 4: Harness Generation System - Code generation, memory management, and error handling
+- [x] Phase 3: Input Transformation System - Type extraction helpers, resource management, and state tracking
+- [ ] Phase 4: Harness Generation System - Code generation, memory management, and error handling(In Progress)
 - [ ] Phase 5: Testing and Optimization - Comprehensive testing and integration with LibAFL
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

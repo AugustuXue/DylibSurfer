@@ -68,20 +68,6 @@ cargo run --bin harness-gen -- generate --ir-file library.ll --output ./output -
 
 - [x] 第一阶段：核心架构 - 基本结构、配置系统和模板引擎
 - [x] 第二阶段：函数选择系统 - 依赖分析、可测试性分析和安全评分
-- [ ] 第三阶段：输入转换系统 - 类型提取辅助工具、资源管理和状态跟踪
-- [ ] 第四阶段：Harness 生成系统 - 代码生成、内存管理和错误处理
+- [x] 第三阶段：输入转换系统 - 类型提取辅助工具、资源管理和状态跟踪
+- [ ] 第四阶段：Harness 生成系统 - 代码生成、内存管理和错误处理（正在完成）
 - [ ] 第五阶段：测试和优化 - 全面测试和与 LibAFL 集成
-
-## 贡献
-
-欢迎贡献！请随时提交 Pull Request。
-
-1. Fork 仓库
-2. 创建您的特性分支（`git checkout -b feature/amazing-feature`）
-3. 提交您的更改（`git commit -m 'Add some amazing feature'`）
-4. 推送到分支（`git push origin feature/amazing-feature`）
-5. 打开一个 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 详情请参阅 LICENSE 文件。
